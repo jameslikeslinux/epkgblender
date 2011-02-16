@@ -1,4 +1,4 @@
--module(epkgbuilder_app).
+-module(epkgblender_app).
 
 -behaviour(application).
 
@@ -12,10 +12,10 @@
 %% ===================================================================
 
 start() ->
-    application:start(epkgbuilder).
+    application:start(epkgblender).
 
 start(_StartType, _StartArgs) ->
-    epkgbuilder_sup:start_link().
+    epkgblender_sup:start_link().
 
 stop(_State) ->
     ok.

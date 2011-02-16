@@ -1,5 +1,5 @@
 
--module(epkgbuilder_sup).
+-module(epkgblender_sup).
 
 -behaviour(supervisor).
 

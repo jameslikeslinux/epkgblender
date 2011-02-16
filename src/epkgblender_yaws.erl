@@ -1,4 +1,4 @@
--module(epkgbuilder_yaws).
+-module(epkgblender_yaws).
 -export ([out/1]).
 
 out(Arg) ->

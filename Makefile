@@ -14,5 +14,5 @@ clean:
 	./rebar delete-deps
 	./rebar clean
 
-dist-clean: clean
+distclean: clean
 	-rm -rf deps ebin
