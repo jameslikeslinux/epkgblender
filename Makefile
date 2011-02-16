@@ -1,16 +1,19 @@
-default: compile nitrogen-www
+default: compile static/nitrogen
 
 get-deps:
 	./rebar get-deps
 
-nitrogen-www: get-deps
+include/basedir.hrl:
+	echo '-define(BASEDIR, "$(PWD)").' > include/basedir.hrl
+
+static/nitrogen:
 	ln -sf ../deps/nitrogen_core/www static/nitrogen
 
-compile: get-deps
+compile: include/basedir.hrl get-deps
 	./rebar compile
 
 clean:
-	-rm -f static/nitrogen
+	-rm -f static/nitrogen include/basedir.hrl
 	./rebar delete-deps
 	./rebar clean
 
