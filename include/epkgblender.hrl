@@ -1,0 +1,1 @@
+-record(epkgblender_user, {username, password_hash, email, validation_token = "", enabled = false, roles = []}).

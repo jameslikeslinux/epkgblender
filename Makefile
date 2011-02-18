@@ -1,3 +1,7 @@
+export CC=gcc
+export CFLAGS=
+export LDFLAGS=
+
 default: compile static/nitrogen
 
 get-deps:

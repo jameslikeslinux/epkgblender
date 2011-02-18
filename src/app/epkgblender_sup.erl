@@ -1,4 +1,3 @@
-
 -module(epkgblender_sup).
 
 -behaviour(supervisor).
@@ -24,5 +23,7 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
-    {ok, { {one_for_one, 5, 10}, []} }.
-
+    application:start(nprocreg),
+    {ok, {{one_for_one, 5, 10}, [
+        ?CHILD(epkgblender_user_server, worker)
+    ]}}.

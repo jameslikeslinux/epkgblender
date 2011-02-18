@@ -1,12 +1,12 @@
 %% -*- mode: nitrogen -*-
--module (index).
+-module (epkgblender).
 -compile(export_all).
 -include_lib("nitrogen_core/include/wf.hrl").
 -include("basedir.hrl").
 
 main() -> #template { file=?BASEDIR ++ "/templates/bare.html" }.
 
-title() -> "Welcome to Blah".
+title() -> "Welcome to Hell".
 
 body() ->
     #container_12 { body=[
@@ -14,6 +14,7 @@ body() ->
     ]}.
 
 inner_body() -> 
+    ?PRINT(node()),
     [
         #h1 { text="Welcome to Nitrogen" },
         #p{},
@@ -30,6 +31,7 @@ inner_body() ->
     ].
 	
 event(click) ->
+    ?DEBUG,
     wf:replace(button, #panel { 
         body="You clicked the button!", 
         actions=#effect { effect=highlight }

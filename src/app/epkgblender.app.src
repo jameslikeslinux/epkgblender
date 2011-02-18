@@ -1,0 +1,5 @@
+{application, epkgblender, [
+    {description, "pkgblender"},
+    {vsn, "1"},
+    {mod, {epkgblender_app, []}}
+]}.
