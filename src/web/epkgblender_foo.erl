@@ -6,7 +6,7 @@
 
 main() -> #template { file=?BASEDIR ++ "/templates/bare.html" }.
 
-title() -> "Welcome to Foo".
+title() -> "Welcome to Foo: " ++ wf:path_info().
 
 body() ->
     #container_12 { body=[

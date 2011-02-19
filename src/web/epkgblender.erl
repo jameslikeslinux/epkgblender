@@ -6,7 +6,7 @@
 
 main() -> #template { file=?BASEDIR ++ "/templates/bare.html" }.
 
-title() -> "Welcome to Hell".
+title() -> "Welcome to Home".
 
 body() ->
     #container_12 { body=[
