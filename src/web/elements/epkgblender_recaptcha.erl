@@ -24,11 +24,57 @@
 reflect() ->
     record_info(fields, epkgblender_recaptcha).
 
-render_element(R) ->
+render_element(Record) ->
     RecaptchaScript = "
-        <script type='text/javascript' src='http://api.recaptcha.net/challenge?k=" ++ R#epkgblender_recaptcha.pubkey ++ "'></script>
+        <script type='text/javascript' src='http://api.recaptcha.net/challenge?k=" ++ Record#epkgblender_recaptcha.pubkey ++ "'></script>
         <script>
+            // Setting focus_response_field has two desired effects:
+            //   1. Disables focusing on response field after a validation/recaptcha reload.
+            //   2. Sets a wfid on the new challenge field so it can be submitted to Nitrogen.
+            Recaptcha.focus_response_field = function() {
+                objs('#recaptcha_challenge_field').addClass('wfid_recaptcha_challenge_field');
+            };
+
+            // Set wfids on the input fields so they will be submitted to Nitrogen.
             objs('#recaptcha_challenge_field').addClass('wfid_recaptcha_challenge_field');
             objs('#recaptcha_response_field').addClass('wfid_recaptcha_response_field');
         </script>",
-    #panel{class = ["recaptcha ", R#epkgblender_recaptcha.class], body = RecaptchaScript}.
+    #panel{class = ["recaptcha ", Record#epkgblender_recaptcha.class], body = RecaptchaScript}.
+
+render_action(Record) ->
+    #custom{
+        trigger = Record#epkgblender_recaptcha_validator.trigger,
+        target = Record#epkgblender_recaptcha_validator.target,
+        text = Record#epkgblender_recaptcha_validator.text,
+        attach_to = Record#epkgblender_recaptcha_validator.attach_to,
+        function = fun validate/2,
+        tag = Record}.
+
+validate(Record, Response) ->
+    case wf:state_default(is_human, false) of
+        true ->
+            true;
+        false ->
+            PostData = wf:f("privatekey=~s&remoteip=~s&challenge=~s&response=~s", [
+                wf:url_encode(Record#epkgblender_recaptcha_validator.privkey),
+                wf:url_encode(remote_ip()),
+                wf:url_encode(wf:q(recaptcha_challenge_field)),
+                wf:url_encode(Response)
+            ]),
+            case httpc:request(post, {"http://www.google.com/recaptcha/api/verify", [], "application/x-www-form-urlencoded", PostData}, [{timeout, 10000}], [{full_result, false}]) of
+                {ok, {200, "true" ++ _Rest}} ->
+                    wf:state(is_human, true),
+                    true;
+                _ ->
+                    wf:wire(#script{script = "Recaptcha.reload();"}),
+                    false
+            end
+    end.
+
+remote_ip() ->
+    {ok, {Address, _Port}} = inet:peername(wf:socket()),
+    inet_parse:ntoa(Address).
+
+reset() ->
+    wf:wire(#script{script = "Recaptcha.reload();"}),
+    wf:state(is_human, false).

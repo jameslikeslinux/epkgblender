@@ -50,13 +50,14 @@ content() ->
         #custom{text = "E-mail address already registered", function = fun email_not_registered/2}
     ]}),
     wf:wire(submit, recaptcha_response_field, #validate{attach_to = recaptcha_status, validators = [
-        #is_email{text = "Invalid"}
+        #is_required{text = "Required"},
+        #epkgblender_recaptcha_validator{text = "Invalid CAPTCHA", privkey = ?RECAPTCHA_PRIVKEY}
     ]}),
     [
         #h1{text = "Create Account"},
         #epkgblender_table{rows = [
             #tablerow{cells = [
-                #tablecell{colspan = 3, body = [#flash{}]}
+                #tablecell{colspan = 3, body = #flash{}}
             ]},
             #tablerow{cells = [
                 #tablecell{class = "form-labels", body = ["Username:", #br{}, #span{class = "hint", text = "(Unix-style username)"}]},
@@ -84,7 +85,7 @@ content() ->
                 #tablecell{body = #span{id = email_status}}
             ]},
             #tablerow{cells = #tablecell{body = #br{}}},
-            #tablerow{style = "text-align: right", cells = [
+            #tablerow{cells = [
                 #tablecell{colspan = 2, body = #epkgblender_recaptcha{id = recaptcha, pubkey = ?RECAPTCHA_PUBKEY}},
                 #tablecell{body = #span{id = recaptcha_status}}
             ]},
@@ -95,7 +96,7 @@ content() ->
     ].
 
 event(register) ->
-    wf:flash(wf:q("recaptcha_response_field")).
+    wf:flash("Registered!").
 
 matches(Regex, String) ->
     case re:run(String, Regex) of

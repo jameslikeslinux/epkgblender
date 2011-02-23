@@ -33,9 +33,9 @@ content() ->
         #h1{text = "Login"},
         #epkgblender_table{rows = [
             #tablerow{cells = [
-                #tablecell{colspan = 3, body = [#flash{}]}
+                #tablecell{colspan = 3, body = #flash{}}
             ]},
-            #tablerow{class="foo", cells = [
+            #tablerow{cells = [
                 #tablecell{class = "form-labels", text = "Username:"},
                 #tablecell{body = #textbox{id = username, next = password}},
                 #tablecell{body = #span{id = username_status}}
@@ -44,6 +44,11 @@ content() ->
                 #tablecell{class = "form-labels", text = "Password:"},
                 #tablecell{body = #password{id = password, next = submit}},
                 #tablecell{body = #span{id = password_status}}
+            ]},
+            #tablerow{cells = #tablecell{body = #br{}}},
+            #tablerow{id = foo, style="display: none", cells = [
+                #tablecell{colspan = 2, body = #epkgblender_recaptcha{id = recaptcha, pubkey = ?RECAPTCHA_PUBKEY}},
+                #tablecell{body = #span{id = recaptcha_status}}
             ]},
             #tablerow{cells = [
                 #tablecell{class =  "form-submit", colspan = 3, body = [#br{}, #button{id = submit, text = "Login", postback = login}]}
@@ -55,7 +60,14 @@ event(login) ->
     [Username, Password] = wf:mq([username, password]),
     case epkgblender_user_server:authenticate(Username, Password) of
         {error, bad_auth} ->
-            wf:flash("Invalid username or password.");
+            wf:state(attempts, wf:state_default(attempts, 0) + 1),
+            case wf:state(attempts) == 2 of
+                true ->
+                    wf:wire(foo, #show{effect = slide, speed = 500}),
+                    wf:flash("Are you a robot?");
+                false ->
+                    wf:flash("Invalid username or password.")
+            end;
         {ok, Roles} ->
             wf:user(Username),
             lists:foreach(fun(Role) -> wf:role(Role, true) end, Roles),

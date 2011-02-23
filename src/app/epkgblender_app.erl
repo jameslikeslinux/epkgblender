@@ -27,6 +27,7 @@
 start() ->
     application:start(mnesia),
     application:start(nprocreg),
+    application:start(inets),
     application:start(epkgblender).
 
 %%

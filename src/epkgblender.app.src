@@ -2,7 +2,7 @@
     {description, "pkgblender"},
     {vsn, "1"},
     {registered, [epkgblender_sup, epkgblender_user_server]},
-    {applications, [kernel, stdlib, mnesia, nprocreg]},
+    {applications, [kernel, stdlib, mnesia, nprocreg, inets]},
     {mod, {epkgblender_app, []}},
     {env, []}
 ]}.
