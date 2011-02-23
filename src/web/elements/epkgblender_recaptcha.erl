@@ -28,7 +28,7 @@ render_element(R) ->
     RecaptchaScript = "
         <script type='text/javascript' src='http://api.recaptcha.net/challenge?k=" ++ R#epkgblender_recaptcha.pubkey ++ "'></script>
         <script>
-            objs('div #recaptcha_challenge_field').addClass('wfid_recaptcha_challenge_field');
-            objs('div #recaptcha_response_field').addClass('wfid_recaptcha_response_field');
+            objs('#recaptcha_challenge_field').addClass('wfid_recaptcha_challenge_field');
+            objs('#recaptcha_response_field').addClass('wfid_recaptcha_response_field');
         </script>",
     #panel{class = ["recaptcha ", R#epkgblender_recaptcha.class], body = RecaptchaScript}.
