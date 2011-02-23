@@ -1,5 +1,5 @@
 %%%
-%%% epkgblender.erl
+%%% epkgblender_logout.erl
 %%% Copyright (C) 2011 James Lee
 %%% 
 %%% This program is free software: you can redistribute it and/or modify
@@ -16,14 +16,9 @@
 %%% along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %%%
 
--module(epkgblender).
+-module(epkgblender_logout).
 -compile(export_all).
--include_lib("nitrogen_core/include/wf.hrl").
--include("config.hrl").
 
-main() -> #template{file = ?BASEDIR ++ "/templates/base.html"}.
-
-title() -> "Home".
-
-content() ->
-    "Hi".
+main() ->
+    wf:logout(),
+    wf:redirect("/").
