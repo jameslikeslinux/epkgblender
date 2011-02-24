@@ -25,21 +25,16 @@ reflect() ->
     record_info(fields, epkgblender_recaptcha).
 
 render_element(Record) ->
-    RecaptchaScript = "
-        <script type='text/javascript' src='http://api.recaptcha.net/challenge?k=" ++ Record#epkgblender_recaptcha.pubkey ++ "'></script>
-        <script>
-            // Setting focus_response_field has two desired effects:
-            //   1. Disables focusing on response field after a validation/recaptcha reload.
-            //   2. Sets a wfid on the new challenge field so it can be submitted to Nitrogen.
-            Recaptcha.focus_response_field = function() {
-                objs('#recaptcha_challenge_field').addClass('wfid_recaptcha_challenge_field');
-            };
+    wf:state(is_human, true),
+    RecaptchaScript = "<script type='text/javascript' src='http://www.google.com/recaptcha/api/js/recaptcha_ajax.js'></script>",
+    [RecaptchaScript, #panel{
+        id = Record#epkgblender_recaptcha.id,
+        class = ["recaptcha ", Record#epkgblender_recaptcha.class],
 
-            // Set wfids on the input fields so they will be submitted to Nitrogen.
-            objs('#recaptcha_challenge_field').addClass('wfid_recaptcha_challenge_field');
-            objs('#recaptcha_response_field').addClass('wfid_recaptcha_response_field');
-        </script>",
-    #panel{class = ["recaptcha ", Record#epkgblender_recaptcha.class], body = RecaptchaScript}.
+        % Include an invisible response field in the DOM so validators
+        % don't freak out when the recaptcha hasn't been created yet.
+        body = #textbox{style = "display: none;", id = recaptcha_response_field, text = "dummy"}
+    }].
 
 render_action(Record) ->
     #custom{
@@ -48,10 +43,11 @@ render_action(Record) ->
         text = Record#epkgblender_recaptcha_validator.text,
         attach_to = Record#epkgblender_recaptcha_validator.attach_to,
         function = fun validate/2,
-        tag = Record}.
+        tag = Record
+    }.
 
 validate(Record, Response) ->
-    case wf:state_default(is_human, false) of
+    case wf:state(is_human) of
         true ->
             true;
         false ->
@@ -64,6 +60,7 @@ validate(Record, Response) ->
             case httpc:request(post, {"http://www.google.com/recaptcha/api/verify", [], "application/x-www-form-urlencoded", PostData}, [{timeout, 10000}], [{full_result, false}]) of
                 {ok, {200, "true" ++ _Rest}} ->
                     wf:state(is_human, true),
+                    (Record#epkgblender_recaptcha_validator.on_success)(),
                     true;
                 _ ->
                     wf:wire(#script{script = "Recaptcha.reload();"}),
@@ -71,10 +68,28 @@ validate(Record, Response) ->
             end
     end.
 
+create(Id, Pubkey) when is_atom(Id) ->
+    create(wf:to_list(Id), Pubkey);
+
+create(Id, Pubkey) ->
+    wf:state(is_human, false),
+    wf:wire(#script{script = wf:f("
+        Recaptcha.create('~s', obj('~s'), {
+            callback: function() {
+                // Set wfids on the input fields so they will be submitted to Nitrogen.
+                objs('#recaptcha_challenge_field').addClass('wfid_recaptcha_challenge_field');
+                objs('#recaptcha_response_field').addClass('wfid_recaptcha_response_field');
+            }
+        });
+
+        // Setting focus_response_field has two desired effects:
+        //   1. Disables focusing on response field after a validation/recaptcha reload.
+        //   2. Sets a wfid on the new challenge field so it can be submitted to Nitrogen.
+        Recaptcha.focus_response_field = function() {
+            objs('#recaptcha_challenge_field').addClass('wfid_recaptcha_challenge_field');
+        };
+    ", [wf:js_escape(Pubkey), wf:js_escape(Id)]) }).
+
 remote_ip() ->
     {ok, {Address, _Port}} = inet:peername(wf:socket()),
     inet_parse:ntoa(Address).
-
-reset() ->
-    wf:wire(#script{script = "Recaptcha.reload();"}),
-    wf:state(is_human, false).

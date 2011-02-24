@@ -29,6 +29,10 @@ title() -> "Login".
 content() ->
     wf:wire(submit, username, #validate{attach_to = username_status, validators = [#is_required{text = "Required"}]}),
     wf:wire(submit, password, #validate{attach_to = password_status, validators = [#is_required{text = "Required"}]}),
+    wf:wire(submit, recaptcha_response_field, #validate{attach_to = recaptcha_status, validators = [
+        #is_required{text = "Required"},
+        #epkgblender_recaptcha_validator{text = "Invalid CAPTCHA", privkey = ?RECAPTCHA_PRIVKEY, on_success = fun() -> wf:state(attempts, 0) end}
+    ]}),
     [
         #h1{text = "Login"},
         #epkgblender_table{rows = [
@@ -45,9 +49,9 @@ content() ->
                 #tablecell{body = #password{id = password, next = submit}},
                 #tablecell{body = #span{id = password_status}}
             ]},
-            #tablerow{cells = #tablecell{body = #br{}}},
-            #tablerow{id = foo, style="display: none", cells = [
-                #tablecell{colspan = 2, body = #epkgblender_recaptcha{id = recaptcha, pubkey = ?RECAPTCHA_PUBKEY}},
+            #tablerow{cells = #tablecell{id = blank_line}},
+            #tablerow{cells = [
+                #tablecell{colspan = 2, body = #epkgblender_recaptcha{id = recaptcha}},
                 #tablecell{body = #span{id = recaptcha_status}}
             ]},
             #tablerow{cells = [
@@ -61,9 +65,10 @@ event(login) ->
     case epkgblender_user_server:authenticate(Username, Password) of
         {error, bad_auth} ->
             wf:state(attempts, wf:state_default(attempts, 0) + 1),
-            case wf:state(attempts) == 2 of
+            case wf:state(attempts) == 5 of
                 true ->
-                    wf:wire(foo, #show{effect = slide, speed = 500}),
+                    wf:replace(blank_line, #tablecell{body = #br{}}),
+                    epkgblender_recaptcha:create(recaptcha, ?RECAPTCHA_PUBKEY),
                     wf:flash("Are you a robot?");
                 false ->
                     wf:flash("Invalid username or password.")

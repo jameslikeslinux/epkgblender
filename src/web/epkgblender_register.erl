@@ -49,6 +49,7 @@ content() ->
         #is_email{text = "Not a valid e-mail address"},
         #custom{text = "E-mail address already registered", function = fun email_not_registered/2}
     ]}),
+    epkgblender_recaptcha:create(recaptcha, ?RECAPTCHA_PUBKEY),
     wf:wire(submit, recaptcha_response_field, #validate{attach_to = recaptcha_status, validators = [
         #is_required{text = "Required"},
         #epkgblender_recaptcha_validator{text = "Invalid CAPTCHA", privkey = ?RECAPTCHA_PRIVKEY}
@@ -86,7 +87,7 @@ content() ->
             ]},
             #tablerow{cells = #tablecell{body = #br{}}},
             #tablerow{cells = [
-                #tablecell{colspan = 2, body = #epkgblender_recaptcha{id = recaptcha, pubkey = ?RECAPTCHA_PUBKEY}},
+                #tablecell{colspan = 2, body = #epkgblender_recaptcha{id = recaptcha}},
                 #tablecell{body = #span{id = recaptcha_status}}
             ]},
             #tablerow{cells = [
