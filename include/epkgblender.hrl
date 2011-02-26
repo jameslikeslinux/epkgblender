@@ -9,3 +9,5 @@
 
 %% Constants
 -define(REMEMBER_ME_TTL, 40320).  % four weeks
+-define(RECAPTCHA_PUBKEY, "6Lda9QsAAAAAAMSig-iP7-W3oOHtD7MIlmQeyk5S").
+-define(RECAPTCHA_PRIVKEY, "6Lda9QsAAAAAAPuxRNyZhgK2IqQpciDwjRqwbvzT").

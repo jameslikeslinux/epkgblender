@@ -19,11 +19,10 @@
 -module(epkgblender_404).
 -compile(export_all).
 -include_lib("nitrogen_core/include/wf.hrl").
--include("config.hrl").
 
 main() -> 
     wf:status_code(404),
-    #template{file = ?BASEDIR "/templates/base.html"}.
+    #template{file = code:priv_dir(epkgblender) ++ "/templates/base.html"}.
 
 title() -> "Page Not Found".
 

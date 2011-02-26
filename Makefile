@@ -2,24 +2,26 @@ export CC=gcc
 export CFLAGS=
 export LDFLAGS=
 
+ESCRIPT = /usr/bin/i86/escript
+
 default: compile static/nitrogen
 
 get-deps:
 	./rebar get-deps
 
-include/config.hrl:
-	echo '-define(BASEDIR, "$(PWD)").' > include/config.hrl
-
 static/nitrogen:
-	ln -sf ../deps/nitrogen_core/www static/nitrogen
+	cp -r deps/nitrogen_core/www static/nitrogen
 
-compile: include/config.hrl get-deps
+compile: get-deps
 	./rebar compile
 
+rel: compile
+	$(ESCRIPT) ./rebar generate force=1
+
 clean:
-	-rm -f static/nitrogen include/config.hrl
+	-rm -rf static/nitrogen
 	./rebar delete-deps
 	./rebar clean
 
 distclean: clean
-	-rm -rf deps ebin
+	-rm -rf deps ebin rel/epkgblender
