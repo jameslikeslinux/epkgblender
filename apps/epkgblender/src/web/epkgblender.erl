@@ -25,4 +25,4 @@ main() -> #template{file = code:priv_dir(epkgblender) ++ "/templates/base.html"}
 title() -> "Home".
 
 content() ->
-    "Hi".
+    "Version 2".

@@ -1,27 +1,23 @@
-export CC=gcc
-export CFLAGS=
-export LDFLAGS=
+PATH = /usr/bin/i86:/usr/bin
 
-ESCRIPT = /usr/bin/i86/escript
-
-default: compile static/nitrogen
+default: compile
 
 get-deps:
 	./rebar get-deps
 
-static/nitrogen:
-	cp -r deps/nitrogen_core/www static/nitrogen
+apps/epkgblender/priv/static/nitrogen:
+	cp -r deps/nitrogen_core/www apps/epkgblender/priv/static/nitrogen
 
-compile: get-deps
+compile: get-deps apps/epkgblender/priv/static/nitrogen
 	./rebar compile
 
 rel: compile
-	$(ESCRIPT) ./rebar generate force=1
+	./rebar generate force=1
 
 clean:
-	-rm -rf static/nitrogen
-	./rebar delete-deps
+	-rm -rf apps/epkgblender/priv/static/nitrogen
 	./rebar clean
 
 distclean: clean
-	-rm -rf deps ebin rel/epkgblender
+	./rebar delete-deps
+	-rm -rf deps apps/epkgblender/ebin rel/epkgblender*
