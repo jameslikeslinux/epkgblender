@@ -24,4 +24,5 @@ out(Arg) ->
     ResponseBridge = simple_bridge:make_response(yaws_response_bridge, Arg),
     nitrogen:init_request(RequestBridge, ResponseBridge),
     wf_handler:set_handler(epkgblender_route_handler, []),
+    wf_handler:set_handler(epkgblender_security_handler, []),
     nitrogen:run().

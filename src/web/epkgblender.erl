@@ -21,7 +21,7 @@
 -include_lib("nitrogen_core/include/wf.hrl").
 -include("config.hrl").
 
-main() -> #template{file = ?BASEDIR ++ "/templates/base.html"}.
+main() -> #template{file = ?BASEDIR "/templates/base.html"}.
 
 title() -> "Home".
 

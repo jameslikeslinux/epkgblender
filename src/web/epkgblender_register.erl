@@ -22,7 +22,7 @@
 -include("config.hrl").
 -include("epkgblender.hrl").
 
-main() -> #template{file = ?BASEDIR ++ "/templates/base.html"}.
+main() -> #template{file = ?BASEDIR "/templates/base.html"}.
 
 title() -> "Create Account".
 
@@ -49,8 +49,8 @@ content() ->
         #is_email{text = "Not a valid e-mail address"},
         #custom{text = "E-mail address already registered", function = fun email_not_registered/2}
     ]}),
-    epkgblender_recaptcha:create(recaptcha, ?RECAPTCHA_PUBKEY),
-    wf:wire(submit, recaptcha_response_field, #validate{attach_to = recaptcha_status, validators = [
+    epkgblender_recaptcha:create(?RECAPTCHA_PUBKEY),
+    wf:wire(submit, recaptcha, #validate{attach_to = recaptcha_status, validators = [
         #is_required{text = "Required"},
         #epkgblender_recaptcha_validator{text = "Invalid CAPTCHA", privkey = ?RECAPTCHA_PRIVKEY}
     ]}),
@@ -97,7 +97,13 @@ content() ->
     ].
 
 event(register) ->
-    wf:flash("Registered!").
+    [Username, Password, Name, Email] = wf:mq([username, password, name, email]),
+    case epkgblender_user_server:register_user(Username, Password, Name, Email) of
+        ok ->
+            wf:flash("Registered successfully!");
+        error ->
+            wf:flash("Somebody registered your email or username after validation.")
+    end.
 
 matches(Regex, String) ->
     case re:run(String, Regex) of

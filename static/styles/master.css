@@ -115,3 +115,7 @@ a img {
     margin: -8px 0 0 10px;
     padding: 3px 0 3px 25px;
 }
+
+.notification {
+    width: 33%;
+}

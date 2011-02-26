@@ -18,7 +18,7 @@
 %% If no module is found, then it will chop off the last part of the path 
 %% (storing it for later access in wf:path_info/0) and try again, repeating
 %% until either a module is found, or there are no more parts to chop. If
-%% a module still can't be found, then the web_404 module is used if defined
+%% a module still can't be found, then the epkgblender_404 module is used if defined
 %% by the user, otherwise a 404 is generated internally.
 %% 
 %% Requests for "/" are automatically sent to index.
@@ -64,7 +64,7 @@ route(Path) ->
         {Module, PathInfo} -> 
             {Module, PathInfo};
         undefined ->
-            {web_404, Path1}
+            {epkgblender_404, Path1}
     end.
 
 %% find_loaded_module(Tokens) -> find_loaded_module(Tokens, []).	
@@ -119,13 +119,13 @@ check_for_404(static_file, _PathInfo, Path) ->
 
 check_for_404(Module, PathInfo, Path) ->
     % Make sure the requested module is loaded. If it
-    % is not, then try to load the web_404 page. If that
+    % is not, then try to load the epkgblender_404 page. If that
     % is not available, then default to the 'file_not_found_page' module.
     case code:ensure_loaded(Module) of
         {module, Module} -> {Module, PathInfo};
         _ -> 
-            case code:ensure_loaded(web_404) of
-                {module, web_404} -> {web_404, Path};
+            case code:ensure_loaded(epkgblender_404) of
+                {module, epkgblender_404} -> {epkgblender_404, Path};
                 _ -> {file_not_found_page, Path}
             end
     end.

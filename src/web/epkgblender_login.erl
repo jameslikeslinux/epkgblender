@@ -22,14 +22,14 @@
 -include("config.hrl").
 -include("epkgblender.hrl").
 
-main() -> #template{file = ?BASEDIR ++ "/templates/base.html"}.
+main() -> #template{file = ?BASEDIR "/templates/base.html"}.
 
 title() -> "Login".
 
 content() ->
     wf:wire(submit, username, #validate{attach_to = username_status, validators = [#is_required{text = "Required"}]}),
     wf:wire(submit, password, #validate{attach_to = password_status, validators = [#is_required{text = "Required"}]}),
-    wf:wire(submit, recaptcha_response_field, #validate{attach_to = recaptcha_status, validators = [
+    wf:wire(submit, recaptcha, #validate{attach_to = recaptcha_status, validators = [
         #is_required{text = "Required"},
         #epkgblender_recaptcha_validator{text = "Invalid CAPTCHA", privkey = ?RECAPTCHA_PRIVKEY, on_success = fun() -> wf:state(attempts, 0) end}
     ]}),
@@ -49,6 +49,7 @@ content() ->
                 #tablecell{body = #password{id = password, next = submit}},
                 #tablecell{body = #span{id = password_status}}
             ]},
+            #tablerow{cells = [#tablecell{}, #tablecell{body = #checkbox{id = remember_me, text = "Remember Me"}}]},
             #tablerow{cells = #tablecell{id = blank_line}},
             #tablerow{cells = [
                 #tablecell{colspan = 2, body = #epkgblender_recaptcha{id = recaptcha}},
@@ -62,19 +63,36 @@ content() ->
 
 event(login) ->
     [Username, Password] = wf:mq([username, password]),
-    case epkgblender_user_server:authenticate(Username, Password) of
+
+    RememberMe = case wf:q(remember_me) of
+        "on" -> true;
+        _ -> false
+    end,
+
+    OldRememberMeSeries = case wf:cookie(remember_me_token) of
+        "" -> "";
+        Token -> hd(string:tokens(Token, ":"))
+    end,
+
+    case epkgblender_user_server:authenticate(Username, Password, RememberMe, OldRememberMeSeries) of
         {error, bad_auth} ->
             wf:state(attempts, wf:state_default(attempts, 0) + 1),
             case wf:state(attempts) == 5 of
                 true ->
                     wf:replace(blank_line, #tablecell{body = #br{}}),
-                    epkgblender_recaptcha:create(recaptcha, ?RECAPTCHA_PUBKEY),
+                    epkgblender_recaptcha:create(?RECAPTCHA_PUBKEY),
                     wf:flash("Are you a robot?");
                 false ->
                     wf:flash("Invalid username or password.")
             end;
-        {ok, Roles} ->
+        {ok, Roles, RememberMeToken} ->
             wf:user(Username),
             lists:foreach(fun(Role) -> wf:role(Role, true) end, Roles),
+            case RememberMeToken of
+                nil -> 
+                    wf:cookie(remember_me_token, "", "/", 0);
+                {Series, Value, _LastUsed} ->
+                    wf:cookie(remember_me_token, Series ++ ":" ++ Value, "/", ?REMEMBER_ME_TTL)
+            end,
             wf:redirect_from_login("/")
     end.

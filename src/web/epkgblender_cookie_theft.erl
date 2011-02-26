@@ -1,5 +1,5 @@
 %%%
-%%% epkgblender_app.erl
+%%% epkgblender_cookie_theft.erl
 %%% Copyright (C) 2011 James Lee
 %%% 
 %%% This program is free software: you can redistribute it and/or modify
@@ -16,25 +16,16 @@
 %%% along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %%%
 
--module(epkgblender_app).
--behaviour(application).
--export([start/0]).
--export([start/2, stop/1]).
+-module(epkgblender_cookie_theft).
+-compile(export_all).
+-include_lib("nitrogen_core/include/wf.hrl").
+-include("config.hrl").
 
-%%
-%% API
-%%
-start() ->
-    application:start(mnesia),
-    application:start(nprocreg),
-    application:start(inets),
-    application:start(epkgblender).
+main() -> #template{file = ?BASEDIR "/templates/base.html"}.
 
-%%
-%% Callbacks
-%%
-start(_StartType, _StartArgs) ->
-    epkgblender_sup:start_link().
+title() -> "Bad Cookie".
 
-stop(_State) ->
-    ok.
+content() -> [
+    #h1{text = "Who stole the cookie from the cookie jar?"},
+    #p{class = "notification", body = "You are attempting to login with an old identifying cookie.  This could mean that someone else has stolen your login cookie.  All of your sessions have been logged-out."}
+].

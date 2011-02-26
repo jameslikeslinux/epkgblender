@@ -20,5 +20,16 @@
 -compile(export_all).
 
 main() ->
-    wf:logout(),
+    case wf:user() of
+        undefined ->
+            ok;
+        User ->
+            RememberMeSeries = case wf:cookie(remember_me_token) of
+                "" -> "";
+                Token -> hd(string:tokens(Token, ":"))
+            end,
+            epkgblender_user_server:logout(User, RememberMeSeries),
+            wf:cookie(remember_me_token, "", "/", 0),
+            wf:logout()
+    end,
     wf:redirect("/").

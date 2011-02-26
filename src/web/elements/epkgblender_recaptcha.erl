@@ -25,15 +25,19 @@ reflect() ->
     record_info(fields, epkgblender_recaptcha).
 
 render_element(Record) ->
-    wf:state(is_human, true),
-    RecaptchaScript = "<script type='text/javascript' src='http://www.google.com/recaptcha/api/js/recaptcha_ajax.js'></script>",
+    RecaptchaDivId = wf:temp_id(),
+    RecaptchaScript = wf:f("
+        <script type='text/javascript' src='http://www.google.com/recaptcha/api/js/recaptcha_ajax.js'></script>
+        <script type='text/javascript'>
+            var recaptcha_div_id = '~s';
+            var recaptcha_response_field_class = '~s';
+        </script>
+    ", [RecaptchaDivId, tl(Record#epkgblender_recaptcha.id)]),
     [RecaptchaScript, #panel{
-        id = Record#epkgblender_recaptcha.id,
-        class = ["recaptcha ", Record#epkgblender_recaptcha.class],
-
+        id = RecaptchaDivId,
         % Include an invisible response field in the DOM so validators
         % don't freak out when the recaptcha hasn't been created yet.
-        body = #textbox{style = "display: none;", id = recaptcha_response_field, text = "dummy"}
+        body = #textbox{style = "display: none;", id = Record#epkgblender_recaptcha.id, text = "dummy"}
     }].
 
 render_action(Record) ->
@@ -47,7 +51,7 @@ render_action(Record) ->
     }.
 
 validate(Record, Response) ->
-    case wf:state(is_human) of
+    case wf:state_default(is_human, true) of
         true ->
             true;
         false ->
@@ -68,17 +72,14 @@ validate(Record, Response) ->
             end
     end.
 
-create(Id, Pubkey) when is_atom(Id) ->
-    create(wf:to_list(Id), Pubkey);
-
-create(Id, Pubkey) ->
+create(Pubkey) ->
     wf:state(is_human, false),
     wf:wire(#script{script = wf:f("
-        Recaptcha.create('~s', obj('~s'), {
+        Recaptcha.create('~s', obj(recaptcha_div_id), {
             callback: function() {
                 // Set wfids on the input fields so they will be submitted to Nitrogen.
                 objs('#recaptcha_challenge_field').addClass('wfid_recaptcha_challenge_field');
-                objs('#recaptcha_response_field').addClass('wfid_recaptcha_response_field');
+                objs('#recaptcha_response_field').addClass(recaptcha_response_field_class);
             }
         });
 
@@ -88,7 +89,7 @@ create(Id, Pubkey) ->
         Recaptcha.focus_response_field = function() {
             objs('#recaptcha_challenge_field').addClass('wfid_recaptcha_challenge_field');
         };
-    ", [wf:js_escape(Pubkey), wf:js_escape(Id)]) }).
+    ", [wf:js_escape(Pubkey)])}).
 
 remote_ip() ->
     {ok, {Address, _Port}} = inet:peername(wf:socket()),

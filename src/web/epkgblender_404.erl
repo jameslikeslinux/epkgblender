@@ -1,5 +1,5 @@
 %%%
-%%% epkgblender_app.erl
+%%% epkgblender_404.erl
 %%% Copyright (C) 2011 James Lee
 %%% 
 %%% This program is free software: you can redistribute it and/or modify
@@ -16,25 +16,18 @@
 %%% along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %%%
 
--module(epkgblender_app).
--behaviour(application).
--export([start/0]).
--export([start/2, stop/1]).
+-module(epkgblender_404).
+-compile(export_all).
+-include_lib("nitrogen_core/include/wf.hrl").
+-include("config.hrl").
 
-%%
-%% API
-%%
-start() ->
-    application:start(mnesia),
-    application:start(nprocreg),
-    application:start(inets),
-    application:start(epkgblender).
+main() -> 
+    wf:status_code(404),
+    #template{file = ?BASEDIR "/templates/base.html"}.
 
-%%
-%% Callbacks
-%%
-start(_StartType, _StartArgs) ->
-    epkgblender_sup:start_link().
+title() -> "Page Not Found".
 
-stop(_State) ->
-    ok.
+content() -> [
+    #h1{text = "Page Not Found"},
+    #p{class = "notification", body = "The page you requested does not exist."}
+].
