@@ -5,19 +5,19 @@ default: compile
 get-deps:
 	./rebar get-deps
 
-apps/epkgblender/priv/static/nitrogen:
-	cp -r deps/nitrogen_core/www apps/epkgblender/priv/static/nitrogen
+static/nitrogen:
+	cp -r deps/nitrogen_core/www static/nitrogen
 
-compile: get-deps apps/epkgblender/priv/static/nitrogen
+compile: get-deps static/nitrogen
 	./rebar compile
 
 rel: compile
-	./rebar generate force=1
+	./rebar generate
 
 clean:
-	-rm -rf apps/epkgblender/priv/static/nitrogen
+	-rm -rf static/nitrogen
 	./rebar clean
 
 distclean: clean
 	./rebar delete-deps
-	-rm -rf deps apps/epkgblender/ebin rel/epkgblender*
+	-rm -rf deps ebin rel/epkgblender*
