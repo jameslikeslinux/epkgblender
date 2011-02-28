@@ -1,5 +1,5 @@
 PATH = /usr/bin/i86:/usr/bin
-REL = prod
+REL = test
 
 default: compile
 
