@@ -1,4 +1,5 @@
 PATH = /usr/bin/i86:/usr/bin
+REL = prod
 
 default: compile
 
@@ -12,7 +13,7 @@ compile: get-deps static/nitrogen
 	./rebar compile
 
 rel: compile
-	./rebar generate
+	cd rel/$(REL); ../../rebar generate
 
 clean:
 	-rm -rf static/nitrogen
@@ -20,4 +21,4 @@ clean:
 
 distclean: clean
 	./rebar delete-deps
-	-rm -rf deps ebin rel/epkgblender*
+	-rm -rf deps ebin rel/prod/epkgblender* rel/test/epkgblender*
