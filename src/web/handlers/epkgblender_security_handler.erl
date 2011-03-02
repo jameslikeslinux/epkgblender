@@ -39,7 +39,7 @@ init(_Config, State) ->
                             wf_context:page_module(epkgblender_cookie_theft)                                                       
                     end;
                 _ ->
-                    wf:cookie(remember_me_token, "", "/", 0)
+                    ok  % invalid cookie, but it's not worth erasing
             end; 
         _User ->
             ok  % the user is already logged in, continue on

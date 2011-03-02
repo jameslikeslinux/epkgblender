@@ -1,8 +1,11 @@
 {application, epkgblender, [
     {description, "pkgblender"},
     {vsn, "1"},
-    {registered, [epkgblender_sup, epkgblender_user_server]},
+    {registered, [epkgblender_sup, epkgblender_user_server, epkgblender_specs_server]},
     {applications, [kernel, stdlib, mnesia, nprocreg, yaws, inets]},
     {mod, {epkgblender_app, []}},
-    {env, []}
+    {env, [
+        {specs_repo, "git@github.com:JamesLeeGWU/specs_dev.git"},
+        {specs_dir, "/var/yaws/specs"}
+    ]}
 ]}.

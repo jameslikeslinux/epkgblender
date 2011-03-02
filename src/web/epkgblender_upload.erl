@@ -1,5 +1,5 @@
 %%%
-%%% epkgblender_sup.erl
+%%% epkgblender_upload.erl
 %%% Copyright (C) 2011 James Lee
 %%% 
 %%% This program is free software: you can redistribute it and/or modify
@@ -16,25 +16,13 @@
 %%% along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %%%
 
--module(epkgblender_sup).
--behaviour(supervisor).
--export([start_link/0]).
--export([init/1]).
+-module(epkgblender).
+-compile(export_all).
+-include_lib("nitrogen_core/include/wf.hrl").
 
-% Helper macro for declaring children of supervisor
--define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
+main() -> #template{file = code:priv_dir(epkgblender) ++ "/templates/base.html"}.
 
-%%
-%% API
-%%
-start_link() ->
-    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+title() -> "Home".
 
-%%
-%% Callbacks
-%%
-init([]) ->
-    {ok, {{one_for_one, 5, 10}, [
-        ?CHILD(epkgblender_user_server, worker),
-        ?CHILD(epkgblender_specs_server, worker)
-    ]}}.
+content() ->
+    "Foo".

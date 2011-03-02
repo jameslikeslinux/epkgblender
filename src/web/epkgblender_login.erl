@@ -68,6 +68,7 @@ event(login) ->
         _ -> false
     end,
 
+    % get the old remember-me cookie for removal from the database
     OldRememberMeSeries = case wf:cookie(remember_me_token) of
         "" -> "";
         Token -> hd(string:tokens(Token, ":"))
@@ -75,14 +76,26 @@ event(login) ->
 
     case epkgblender_user_server:authenticate(Username, Password, RememberMe, OldRememberMeSeries) of
         {error, bad_auth} ->
+            % close any existing notification flashes
+            case wf:state(flash_id) of
+                undefined ->
+                    ok;
+                OldFlashId ->
+                    wf:wire(OldFlashId, #hide{effect = blind, speed = 100})
+            end,
+
+            % remember the id of the message that is about to be displayed
+            FlashId = wf:temp_id(),
+            wf:state(flash_id, FlashId),
+
             wf:state(attempts, wf:state_default(attempts, 0) + 1),
             case wf:state(attempts) == 5 of
                 true ->
                     wf:replace(blank_line, #tablecell{body = #br{}}),
                     epkgblender_recaptcha:create(?RECAPTCHA_PUBKEY),
-                    wf:flash("Are you a robot?");
+                    wf:flash(FlashId, "Are you a robot?");
                 false ->
-                    wf:flash("Invalid username or password.")
+                    wf:flash(FlashId, "Invalid username or password.")
             end;
         {ok, Roles, RememberMeToken} ->
             wf:user(Username),
@@ -93,5 +106,16 @@ event(login) ->
                 {Series, Value, _LastUsed} ->
                     wf:cookie(remember_me_token, Series ++ ":" ++ Value, "/", ?REMEMBER_ME_TTL)
             end,
-            wf:redirect_from_login("/")
+            redirect_from_login("/")
+    end.
+
+%% modified from action_redirect.erl
+%% required because requests are rewritten: / -> /epkgblender
+%% XXX: this is a hack
+%% remove "/epkgblender" from the URI
+redirect_from_login(DefaultUrl) ->  
+    PickledURI = wf:q(x),
+    case wf:depickle(PickledURI) of
+        undefined -> action_redirect:redirect(DefaultUrl);
+        Other -> action_redirect:redirect(re:replace(Other, "/epkgblender", "", [{return, list}]))
     end.

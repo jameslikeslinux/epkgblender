@@ -98,7 +98,8 @@ content() ->
 event(register) ->
     [Username, Password, Name, Email] = wf:mq([username, password, name, email]),
     case epkgblender_user_server:register_user(Username, Password, Name, Email) of
-        ok ->
+        {ok, User} ->
+            epkgblender_common:send_validation_email(User),
             wf:flash("Registered successfully!");
         error ->
             wf:flash("Somebody registered your email or username after validation.")

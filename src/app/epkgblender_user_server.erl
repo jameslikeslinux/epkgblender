@@ -31,7 +31,6 @@
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
--spec(register_user(string(), string(), string(), string()) -> ok | user_already_exists | email_already_registered).
 register_user(Username, Password, Name, Email) ->
     gen_server:call(?MODULE, {register_user, Username, Password, Name, Email}).
 
@@ -81,12 +80,12 @@ handle_call({register_user, Username, Password, Name, Email}, _From, State) ->
 
     case mnesia:transaction(F) of
         {aborted, user_already_exists} ->
-            {reply, user_already_exists, State};
+            {reply, {error, user_already_exists}, State};
         {aborted, email_already_registered} ->
-            {reply, email_already_registered, State};
+            {reply, {error, email_already_registered}, State};
         {atomic, ok} ->
-            generate_email_validation(User),
-            {reply, ok, State}
+            NewUser = generate_email_validation(User),
+            {reply, {ok, NewUser}, State}
     end;
 
 handle_call({validate_email, Username, ValidationToken}, _From, State) ->
@@ -98,25 +97,25 @@ handle_call({validate_email, Username, ValidationToken}, _From, State) ->
 
         % If the input token matches the one in the database
         ValidationToken ->
+            NewUser = User#epkgblender_user{validation_token = "", roles = [user|User#epkgblender_user.roles]},
             F = fun() ->
                 case get_user_by_email(User#epkgblender_user.email) of
                     {error, no_such_user} ->
-                        mnesia:write(User#epkgblender_user{validation_token = ""});
+                        mnesia:write(NewUser);
                     {ok, _User} ->
                         mnesia:abort(email_already_registered)
                 end
             end,
-
             case mnesia:transaction(F) of
                 {aborted, email_already_registered} ->
                     {reply, email_already_registered, State};
                 {atomic, ok} ->
-                    {reply, ok, State} 
+                    {reply, {ok, NewUser}, State} 
             end;
 
         _ ->
-            generate_email_validation(User),
-            {reply, bad_validation_token, State}
+            NewUser = generate_email_validation(User),
+            {reply, {bad_validation_token, NewUser}, State}
     end;
 
 handle_call({authenticate, Username, Password, RememberMe, OldRememberMeSeries}, _From, State) ->
@@ -138,7 +137,7 @@ handle_call({authenticate, Username, Password, RememberMe, OldRememberMeSeries},
                     end,
                             
                     mnesia:transaction(fun() -> mnesia:write(User#epkgblender_user{remember_me_tokens = NewTokens}) end),
-                    {reply, {ok, [password, User#epkgblender_user.roles], Token}, State};
+                    {reply, {ok, [password|User#epkgblender_user.roles], Token}, State};
                 false ->
                     {reply, {error, bad_auth}, State}
             end;
@@ -177,7 +176,9 @@ handle_call({email_registered, Email}, _From, State) ->
             {reply, true, State};
         {error, no_such_user} ->
             {reply, false, State}
-    end.
+    end;
+
+handle_call(_Msg, _From, State) -> {noreply, State}.
 
 handle_cast({logout, Username, RememberMeSeries}, State) ->
     case get_user(Username) of
@@ -218,8 +219,9 @@ code_change(_OldVsn, State, _Extra) -> {ok, State}.
 %%
 generate_email_validation(User) ->
     ValidationToken = bin_to_hexstr(crypto:rand_bytes(16)),
-    mnesia:transaction(fun() -> mnesia:write(User#epkgblender_user{validation_token = ValidationToken}) end).
-    %% TODO: Send email
+    NewUser = User#epkgblender_user{validation_token = ValidationToken},
+    mnesia:transaction(fun() -> mnesia:write(NewUser) end),
+    NewUser.
 
 generate_remember_me_token() ->
     Series = bin_to_hexstr(crypto:rand_bytes(16)),
