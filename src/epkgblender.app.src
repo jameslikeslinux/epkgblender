@@ -2,7 +2,7 @@
     {description, "pkgblender"},
     {vsn, "1"},
     {registered, [epkgblender_sup, epkgblender_user_server, epkgblender_specs_server]},
-    {applications, [kernel, stdlib, mnesia, nprocreg, yaws, inets]},
+    {applications, [kernel, stdlib, mnesia, nprocreg, yaws, inets, bcrypt]},
     {mod, {epkgblender_app, []}},
     {env, [
         {specs_repo, "git@github.com:JamesLeeGWU/specs_dev.git"},

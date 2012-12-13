@@ -1,7 +1,7 @@
 PATH = /usr/bin/i86:/usr/bin:/bin
 REL = test
 
-default: compile
+default: rel
 
 get-deps:
 	./rebar get-deps
@@ -12,7 +12,20 @@ static/nitrogen:
 compile: get-deps static/nitrogen
 	./rebar compile
 
-rel: compile
+stop:
+	-./rel/$(REL)/epkgblender/bin/epkgblender stop
+
+start:
+	-./rel/$(REL)/epkgblender/bin/epkgblender start
+
+console:
+	-./rel/$(REL)/epkgblender/bin/epkgblender console
+
+attach:
+	-./rel/$(REL)/epkgblender/bin/epkgblender attach
+
+rel: compile stop
+	-rm -rf rel/$(REL)/epkgblender
 	cd rel/$(REL); ../../rebar generate
 
 clean:
