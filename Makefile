@@ -1,4 +1,4 @@
-PATH = /usr/bin/i86:/usr/bin
+PATH = /usr/bin/i86:/usr/bin:/bin
 REL = test
 
 default: compile

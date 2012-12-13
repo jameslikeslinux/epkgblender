@@ -64,7 +64,8 @@ init([]) ->
     {ok, []}.
 
 handle_call({register_user, Username, Password, Name, Email}, _From, State) ->
-    PasswordHash = bcrypt:hashpw(Password, bcrypt:gen_salt()),
+    {ok, Salt} = bcrypt:gen_salt(),
+    {ok, PasswordHash} = bcrypt:hashpw(Password, Salt),
     User = #epkgblender_user{username = Username, password_hash = PasswordHash, name = Name, email = Email},
 
     F = fun() ->
@@ -122,9 +123,9 @@ handle_call({authenticate, Username, Password, RememberMe, OldRememberMeSeries},
     case get_user(Username) of
         {ok, User} ->
             PasswordHash = User#epkgblender_user.password_hash,
-            case PasswordHash == bcrypt:hashpw(Password, PasswordHash) of
+            case bcrypt:hashpw(Password, PasswordHash) of
                 % if the password matches
-                true ->
+                {ok, PasswordHash} ->
                     % remove the old remember-me token from the database
                     Tokens = lists:keydelete(OldRememberMeSeries, 1, User#epkgblender_user.remember_me_tokens),
 
@@ -138,7 +139,7 @@ handle_call({authenticate, Username, Password, RememberMe, OldRememberMeSeries},
                             
                     mnesia:transaction(fun() -> mnesia:write(User#epkgblender_user{remember_me_tokens = NewTokens}) end),
                     {reply, {ok, [password|User#epkgblender_user.roles], Token}, State};
-                false ->
+                _ ->
                     {reply, {error, bad_auth}, State}
             end;
         {error, no_such_user} ->
